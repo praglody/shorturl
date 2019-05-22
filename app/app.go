@@ -1,19 +1,42 @@
 package app
 
 import (
-	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
+	"github.com/orca-zhang/lrucache"
 	"shorturl/lib/dao"
 )
 
-func Run() {
-	res := dao.GetRow("qwerty")
-	fmt.Println("查询结果", res)
+var lc *lrucache.LRUCache
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "hello, short url")
+func init() {
+	lc = lrucache.New(1000)
+}
+
+func Run() {
+	r := gin.Default()
+	r.GET("/:path", func(context *gin.Context) {
+		path := context.Param("path")
+		if len(path) != 6 {
+			context.AbortWithStatus(204)
+		}
+
+		url, ok := lc.Get(path)
+		if ok {
+			context.Header("Location", url.(string))
+			context.AbortWithStatus(302)
+			return
+		}
+
+		shorturl, err := dao.GetRow(path)
+		if err != nil {
+			context.AbortWithStatus(204)
+			return
+		}
+
+		lc.Put(path, shorturl.Url)
+		context.Header("Location", shorturl.Url)
+		context.AbortWithStatus(302)
 	})
 
-	err := http.ListenAndServe("0.0.0.0:8080", nil)
-	panic(err)
+	r.Run("0.0.0.0:8080")
 }
