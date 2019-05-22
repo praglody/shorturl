@@ -18,6 +18,7 @@ func Run() {
 		path := context.Param("path")
 		if len(path) != 6 {
 			context.AbortWithStatus(204)
+			return
 		}
 
 		url, ok := lc.Get(path)
