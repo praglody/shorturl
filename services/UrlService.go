@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
-	"math/rand"
+	"shorturl/commons"
 	"shorturl/models"
 	"time"
 )
@@ -18,22 +18,29 @@ func init() {
 }
 
 func (UrlService) GenCode(url string) (code string, err error) {
-
 	var urlCode models.UrlCode
 
-	existed := urlCode.GetCode(url)
+	uc := urlCode.GetByUrl(url)
 
-	if existed.Code != "" {
-		return existed.Code, nil
+	var id int
+	if uc.Code != "" {
+		return code, nil
+	} else if uc.Id != 0 && uc.Code == "" {
+		id = uc.Id
+	} else {
+		id = urlCode.AddUrl(url)
 	}
 
-	code = getValidCode()
+	if id == 0 {
+		return "", errors.New("get id failed")
+	}
+	code = TransToCode(id)
 	if code == "" {
 		return code, errors.New("gen code failed")
 	}
 
 	logs.Info("add new short url, code: " + code)
-	err = urlCode.AddUrl(url, code)
+	err = urlCode.UpdateCode(id, code)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +54,7 @@ func (UrlService) RecCode(code string) (string, error) {
 	url := cache.GetString(bm.Get(code))
 	if url == "" {
 		var urlCode models.UrlCode
-		result := urlCode.GetUrl(code)
+		result := urlCode.GetByCode(code)
 		if result.Url == "" {
 			return "", errors.New("code not existed")
 		}
@@ -58,29 +65,18 @@ func (UrlService) RecCode(code string) (string, error) {
 	return url, nil
 }
 
-func getValidCode() string {
+//把这个数字转换成62进制
+func TransToCode(id int) string {
+	bytes := []byte("0lv12NUJ3789qazwegbyhnujmipQAZWsxSXEDCR4kt56FVTGBYHMIodcrfKLOP")
+
 	var code string
-	var urlCode models.UrlCode
 
-	code = genRandomCode()
-
-	for i := 0; i < 5; i++ {
-		url := urlCode.GetUrl(code)
-		if url.Url == "" {
-			return code
+	for m := id; m > 0; m = m / 62 {
+		n := m % 62
+		code += string(bytes[n])
+		if m < 62 {
+			break
 		}
 	}
-	return ""
-}
-
-func genRandomCode() string {
-	bytes := []byte("0123456789qazwsxedcrfvtgbyhnujmiklopQAZWSXEDCRFVTGBYHNUJMIKLOP")
-
-	var str []byte
-	for i := 0; i < 6; i++ {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		str = append(str, bytes[r.Intn(len(bytes))])
-	}
-
-	return string(str)
+	return commons.ReverseString(code)
 }

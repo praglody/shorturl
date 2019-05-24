@@ -5,11 +5,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
+	"runtime"
 	"shorturl/models"
 	"shorturl/routers"
 )
 
 func main() {
+	runtime.GOMAXPROCS(4)
+
 	if models.Conf.AppEnv == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -24,7 +27,7 @@ func main() {
 
 	routers.Route(r)
 
-	err = r.Run(":8080")
+	err = r.Run(":" + models.Conf.AppPort)
 	if err != nil {
 		log.Fatalln("Server start failed, error: " + err.Error())
 	}

@@ -14,6 +14,7 @@ func Create(c *gin.Context) {
 	url := c.PostForm("url")
 	logs.Info("incoming create url request, url: " + url)
 	if url == "" || !strings.HasPrefix(url, "http") {
+		logs.Error("url is error, url: " + url)
 		c.JSON(http.StatusOK, gin.H{
 			"code": commons.ParamsError,
 			"msg":  "参数错误",
@@ -23,6 +24,7 @@ func Create(c *gin.Context) {
 	}
 	code, err := services.UrlService{}.GenCode(url)
 	if err != nil {
+		logs.Error("gen code failed, error: " + err.Error())
 		c.JSON(http.StatusOK, gin.H{
 			"code": commons.Failed,
 			"msg":  "请求出错",
