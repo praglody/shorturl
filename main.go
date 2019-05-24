@@ -32,7 +32,7 @@ func main() {
 
 func init() {
 	dir, _ := os.Getwd()
-	file := dir + "/configs/config.ini"
+	file := dir + "/env.ini"
 
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		log.Panicf("conf file [%s]  not found!", file)

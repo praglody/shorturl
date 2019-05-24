@@ -1,4 +1,4 @@
-package helps
+package commons
 
 import (
 	"crypto/md5"

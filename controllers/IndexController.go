@@ -4,7 +4,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"shorturl/helps"
+	"shorturl/commons"
 	"shorturl/models"
 	"shorturl/services"
 	"strings"
@@ -15,7 +15,7 @@ func Create(c *gin.Context) {
 	logs.Info("incoming create url request, url: " + url)
 	if url == "" || !strings.HasPrefix(url, "http") {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.ParamsError,
+			"code": commons.ParamsError,
 			"msg":  "参数错误",
 			"data": "",
 		})
@@ -24,14 +24,14 @@ func Create(c *gin.Context) {
 	code, err := services.UrlService{}.GenCode(url)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.Failed,
+			"code": commons.Failed,
 			"msg":  "请求出错",
 			"data": "",
 		})
 		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.Success,
+			"code": commons.Success,
 			"msg":  "ok",
 			"data": gin.H{
 				"url": models.Conf.AppUrl + code,
@@ -46,7 +46,7 @@ func Query(c *gin.Context) {
 	logs.Info("incoming query, code: " + code)
 	if len(code) != 6 {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.ParamsError,
+			"code": commons.ParamsError,
 			"msg":  "参数错误",
 			"data": "",
 		})
@@ -55,14 +55,14 @@ func Query(c *gin.Context) {
 	url, err := services.UrlService{}.RecCode(code)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.Success,
+			"code": commons.Success,
 			"msg":  err.Error(),
 			"data": "",
 		})
 		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"code": helps.Success,
+			"code": commons.Success,
 			"msg":  "ok",
 			"data": gin.H{
 				"url": url,
