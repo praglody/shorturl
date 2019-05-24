@@ -4,9 +4,9 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"shorturl/app/helps"
-	"shorturl/app/services"
+	"shorturl/helps"
 	"shorturl/models"
+	"shorturl/services"
 	"strings"
 )
 
@@ -34,7 +34,7 @@ func Create(c *gin.Context) {
 			"code": helps.Success,
 			"msg":  "ok",
 			"data": gin.H{
-				"url": models.AppConfig.BaseUrl + code,
+				"url": models.Conf.AppUrl + code,
 			},
 		})
 		return

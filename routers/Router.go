@@ -2,7 +2,7 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"shorturl/app/controllers"
+	"shorturl/controllers"
 )
 
 func Route(Router *gin.Engine) {

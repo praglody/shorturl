@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -11,9 +10,7 @@ import (
 )
 
 func main() {
-	initConfig()
-
-	if models.AppConfig.Env != "prod" {
+	if models.Conf.AppEnv == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -33,14 +30,12 @@ func main() {
 	}
 }
 
-func initConfig() {
-	conf, err := config.NewConfig("ini", "configs/app.ini")
-	if err != nil {
-		panic(err)
-	}
-	env := conf.String("env")
-	port := conf.String("port")
-	baseUrl := conf.String("base_url")
+func init() {
 	dir, _ := os.Getwd()
-	models.AppConfig = &models.AppConf{Env: env, Port: port, BaseUrl: baseUrl, WorkDir: dir}
+	file := dir + "/configs/config.ini"
+
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		log.Panicf("conf file [%s]  not found!", file)
+	}
+	models.Conf.InitConfig(file)
 }

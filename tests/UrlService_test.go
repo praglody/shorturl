@@ -1,8 +1,8 @@
-package main
+package tests
 
 import (
 	"github.com/stretchr/testify/assert"
-	"shorturl/app/services"
+	"shorturl/services"
 	"testing"
 )
 

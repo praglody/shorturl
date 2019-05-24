@@ -2,7 +2,7 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
-	"shorturl/app/helps"
+	"shorturl/helps"
 	"time"
 )
 
