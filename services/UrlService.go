@@ -2,29 +2,37 @@ package services
 
 import (
 	"errors"
-	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
-	"shorturl/commons"
+	lru "github.com/hashicorp/golang-lru"
 	"shorturl/models"
-	"time"
 )
 
 type UrlService struct{}
 
-var bm cache.Cache
+//cache code
+var cCode *lru.Cache
+
+//cache url
+var cUrl *lru.Cache
+
+var urlCode *models.UrlCode
 
 func init() {
-	bm, _ = cache.NewCache("memory", `{"interval":60}`)
+	cCode, _ = lru.New(10000)
+	cUrl, _ = lru.New(10000)
+	urlCode = &models.UrlCode{}
 }
 
 func (UrlService) GenCode(url string) (code string, err error) {
-	var urlCode models.UrlCode
-
+	//get from cache
+	if code, ok := cUrl.Get(models.MD5(url)); ok {
+		return code.(string), nil
+	}
 	uc := urlCode.GetByUrl(url)
-
 	var id int
 	if uc.Code != "" {
-		return code, nil
+		cUrl.Add(models.MD5(url), uc.Code)
+		return uc.Code, nil
 	} else if uc.Id != 0 && uc.Code == "" {
 		id = uc.Id
 	} else {
@@ -36,7 +44,7 @@ func (UrlService) GenCode(url string) (code string, err error) {
 	}
 	code = TransToCode(id)
 	if code == "" {
-		return code, errors.New("gen code failed")
+		return "", errors.New("gen code failed")
 	}
 
 	logs.Info("add new short url, code: " + code)
@@ -44,22 +52,27 @@ func (UrlService) GenCode(url string) (code string, err error) {
 	if err != nil {
 		return "", err
 	}
-	_ = bm.Put(code, url, time.Hour)
-
+	//cache
+	cCode.Add(code, url)
+	cUrl.Add(models.MD5(url), code)
 	return code, nil
 }
 
 func (UrlService) RecCode(code string) (string, error) {
-	//cache
-	url := cache.GetString(bm.Get(code))
+	//get from cache
+	var url string
+	c, _ := cCode.Get(code)
+	if c != nil {
+		url = c.(string)
+	}
 	if url == "" {
-		var urlCode models.UrlCode
 		result := urlCode.GetByCode(code)
 		if result.Url == "" {
 			return "", errors.New("code not existed")
 		}
 		url = result.Url
-		_ = bm.Put(code, url, time.Hour)
+		//add cache
+		cCode.Add(code, url)
 	}
 
 	return url, nil
@@ -78,5 +91,5 @@ func TransToCode(id int) string {
 			break
 		}
 	}
-	return commons.ReverseString(code)
+	return code
 }

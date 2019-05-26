@@ -58,6 +58,5 @@ func initRedis() {
 			return c, nil
 		},
 	}
-
 	Redis = redisPool
 }

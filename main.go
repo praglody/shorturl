@@ -5,21 +5,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
-	"runtime"
 	"shorturl/models"
 	"shorturl/routers"
 )
 
 func main() {
-	runtime.GOMAXPROCS(4)
-
 	if models.Conf.AppEnv == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.Default()
 
-	err := logs.SetLogger(logs.AdapterFile, `{"filename":"app.log"}`)
+	err := logs.SetLogger(logs.AdapterFile, `{"filename":"storage/logs/app.log"}`)
 
 	if err != nil {
 		log.Fatalln("Log init failed, error: " + err.Error())
@@ -35,7 +32,7 @@ func main() {
 
 func init() {
 	dir, _ := os.Getwd()
-	file := dir + "/env.ini"
+	file := dir + "/.env"
 
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		log.Panicf("conf file [%s]  not found!", file)

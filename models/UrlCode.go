@@ -2,7 +2,6 @@ package models
 
 import (
 	_ "github.com/go-sql-driver/mysql"
-	"shorturl/commons"
 	"time"
 )
 
@@ -22,18 +21,15 @@ func (UrlCode) TableName() string {
 func (uc UrlCode) AddUrl(url string) int {
 	uc.Url = url
 	uc.Code = ""
-	uc.MD5 = commons.MD5(url)
+	uc.MD5 = MD5(url)
 	uc.CreatedAt = int(time.Now().Unix())
 	DB.Create(&uc)
-
 	return uc.Id
 }
 
 func (uc UrlCode) GetByUrl(url string) UrlCode {
 	var result UrlCode
-
-	DB.Where("md5 = ?", commons.MD5(url)).Find(&result)
-
+	DB.Where("md5 = ?", MD5(url)).Find(&result)
 	return result
 }
 
@@ -46,7 +42,6 @@ func (uc UrlCode) UpdateCode(id int, code string) error {
 	DB.Find(&uc, id)
 	uc.Code = code
 	DB.Save(&uc)
-
 	if DB.Error != nil {
 		return DB.Error
 	}

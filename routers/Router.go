@@ -2,16 +2,16 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"shorturl/controllers"
+	. "shorturl/controllers"
 )
 
 func Route(Router *gin.Engine) {
 
-	Router.GET("/:code", controllers.Path)
+	Router.GET("/:code", Index.Path)
 
 	api := Router.Group("v1")
 	{
-		api.POST("/create", controllers.Create)
-		api.POST("/query", controllers.Query)
+		api.POST("/create", Index.Create)
+		api.POST("/query", Index.Query)
 	}
 }

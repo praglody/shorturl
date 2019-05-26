@@ -14,5 +14,5 @@ func TestGenCode(t *testing.T) {
 
 func TestTransToCode(t *testing.T) {
 	code := services.TransToCode(10000)
-	assert.Equal(t, "", code)
+	assert.Equal(t, "vCb", code)
 }
