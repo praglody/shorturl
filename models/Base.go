@@ -16,7 +16,7 @@ type BaseModel struct {
 	Status    uint8 `json:"status"`
 }
 
-// DB 数据库连接
+// DB连接
 var DB *gorm.DB
 
 // redis连接

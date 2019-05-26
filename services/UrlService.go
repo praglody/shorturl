@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 	"github.com/astaxie/beego/logs"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 	"shorturl/models"
 )
 
@@ -15,6 +15,7 @@ var cCode *lru.Cache
 //cache url
 var cUrl *lru.Cache
 
+//db model
 var urlCode *models.UrlCode
 
 func init() {
@@ -78,7 +79,7 @@ func (UrlService) RecCode(code string) (string, error) {
 	return url, nil
 }
 
-//把这个数字转换成62进制
+//把数字转换成62进制
 func TransToCode(id int) string {
 	bytes := []byte("0lv12NUJ3789qazwegbyhnujmipQAZWsxSXEDCR4kt56FVTGBYHMIodcrfKLOP")
 

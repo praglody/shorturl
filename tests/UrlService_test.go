@@ -7,12 +7,19 @@ import (
 )
 
 func TestGenCode(t *testing.T) {
-	code, err := services.UrlService{}.GenCode("http://www.baidu.com")
+	expected, err := services.UrlService{}.GenCode("http://www.baidu.com")
 	assert.Nil(t, err)
-	assert.NotEmpty(t, code)
+	assert.NotEmpty(t, expected)
+
+	expected, err = services.UrlService{}.GenCode("http://www.iwork.com")
+	assert.Nil(t, err)
+	assert.NotEmpty(t, expected)
 }
 
 func TestTransToCode(t *testing.T) {
-	code := services.TransToCode(10000)
-	assert.Equal(t, "vCb", code)
+	expected := services.TransToCode(10000)
+	assert.Equal(t, "bCv", expected)
+
+	expected = services.TransToCode(20000)
+	assert.Equal(t, "DqN", expected)
 }

@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"shorturl/models"
 	"shorturl/routers"
+	"time"
 )
 
 func main() {
@@ -14,7 +16,24 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	r := gin.Default()
+	file, _ := os.Create("storage/logs/access.log")
+	gin.DefaultWriter = file
+	r := gin.New()
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		//定制日志格式
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
+			param.ClientIP,
+			param.TimeStamp.Format(time.RFC1123),
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
+	r.Use(gin.Recovery())
 
 	err := logs.SetLogger(logs.AdapterFile, `{"filename":"storage/logs/app.log"}`)
 
