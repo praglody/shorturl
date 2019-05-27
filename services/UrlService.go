@@ -5,62 +5,71 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/hashicorp/golang-lru"
+	"github.com/jinzhu/gorm"
+	"os"
 	"shorturl/models"
-	"sync"
 	"time"
 )
 
 type UrlService struct{}
 
-type Clicks struct {
-	sync.RWMutex
-	count map[string]int
-}
-
 //cache code
-var cCode *lru.Cache
+var cCode, _ = lru.New(10000)
 
 //cache url
-var cUrl *lru.Cache
+var cUrl, _ = lru.New(10000)
 
 //db model
-var urlCode *models.UrlCode
+var urlCode = &models.UrlCode{}
 
-//click
-var clicks *Clicks
+//click channel
+var ClickC = make(chan string)
 
 func init() {
-	cCode, _ = lru.New(10000)
-	cUrl, _ = lru.New(10000)
-	urlCode = &models.UrlCode{}
-
-	startClicker()
+	//点击数异步入库
+	go Clicker()
 }
 
-//save click to db
-func startClicker() {
-	clicks = &Clicks{count: make(map[string]int)}
+func Clicker() {
 	go func() {
-		ticker := time.NewTicker(10 * time.Second)
+		var clicks = make(map[string]int, 100)
 		for {
-			if len(clicks.count) > 0 {
-				SaveClick()
+			c := <-ClickC
+			if c == "shutdown" {
+				go saveAndShutdown(clicks)
+			} else if c == "save" {
+				go saveToDB(clicks)
+				clicks = make(map[string]int, 100)
+			} else {
+				clicks[c]++
+				if len(clicks) > 1000 {
+					go saveToDB(clicks)
+					clicks = make(map[string]int, 100)
+				}
 			}
+		}
+	}()
+
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		for {
 			<-ticker.C
+			ClickC <- "save"
 		}
 	}()
 }
 
-func SaveClick() {
-	clicks.Lock()
-	data := clicks.count
-	clicks = &Clicks{count: make(map[string]int)} //create a new map
-	for code, c := range data {
+func saveToDB(clicks map[string]int) {
+	for code, c := range clicks {
+		var uc models.UrlCode
+		models.DB.Where("code = ?", code).Find(&uc).UpdateColumn("click", gorm.Expr("click + ?", c))
 		logs.Info(fmt.Sprintf("add %d click on %s", c, code))
-		models.DB.Where("code = ?", code).Find(&urlCode)
-		urlCode.Click = urlCode.Click + c
-		models.DB.Save(&urlCode)
 	}
+}
+
+func saveAndShutdown(clicks map[string]int) {
+	saveToDB(clicks)
+	os.Exit(1)
 }
 
 func (UrlService) GenCode(url string) (code string, err error) {
@@ -93,8 +102,11 @@ func (UrlService) GenCode(url string) (code string, err error) {
 		return "", err
 	}
 	//cache
-	cCode.Add(code, url)
-	cUrl.Add(models.MD5(url), code)
+	go func() {
+		cCode.Add(code, url)
+		cUrl.Add(models.MD5(url), code)
+	}()
+
 	return code, nil
 }
 
@@ -112,12 +124,14 @@ func (UrlService) RecCode(code string) (string, error) {
 		}
 		url = result.Url
 		//add cache
-		cCode.Add(code, url)
+		go func() {
+			cCode.Add(code, url)
+		}()
 	}
 
-	clicks.Lock()
-	clicks.count[code]++
-	clicks.Unlock()
+	go func() {
+		ClickC <- code
+	}()
 	return url, nil
 }
 

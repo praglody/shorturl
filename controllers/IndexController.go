@@ -11,14 +11,10 @@ import (
 	"strings"
 )
 
-var Index *IndexController
+var Index = &IndexController{}
 
 type IndexController struct {
 	Controller
-}
-
-func init() {
-	Index = &IndexController{}
 }
 
 func (i *IndexController) Create(c *gin.Context) {

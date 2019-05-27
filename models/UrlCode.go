@@ -19,7 +19,8 @@ func (UrlCode) TableName() string {
 	return "tbl_url_code"
 }
 
-func (uc UrlCode) AddUrl(url string) int {
+func (UrlCode) AddUrl(url string) int {
+	var uc UrlCode
 	uc.Url = url
 	uc.Code = ""
 	uc.MD5 = MD5(url)
@@ -28,18 +29,20 @@ func (uc UrlCode) AddUrl(url string) int {
 	return uc.Id
 }
 
-func (uc UrlCode) GetByUrl(url string) UrlCode {
+func (UrlCode) GetByUrl(url string) UrlCode {
 	var result UrlCode
 	DB.Where("md5 = ?", MD5(url)).Find(&result)
 	return result
 }
 
-func (uc UrlCode) GetByCode(code string) UrlCode {
+func (UrlCode) GetByCode(code string) UrlCode {
+	var uc UrlCode
 	DB.Where("code = ?", code).First(&uc)
 	return uc
 }
 
-func (uc UrlCode) UpdateCode(id int, code string) error {
+func (UrlCode) UpdateCode(id int, code string) error {
+	var uc UrlCode
 	DB.Find(&uc, id)
 	uc.Code = code
 	DB.Save(&uc)

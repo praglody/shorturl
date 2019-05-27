@@ -1,12 +1,11 @@
 # shorturl
-一个用心做的短网址服务
+A Short Url Service Written By Golang
 
 ## 特性
 
 - 使用 mysql 存储原始数据
-- 可选使用 redis 做数据缓存
-- 支持点击数统计，统计数据异步落盘
 - 使用lru cache 缓存热点数据，提高查询速度
+- 支持点击数统计，统计数据异步落盘
 
 ## 介绍
 
