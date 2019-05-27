@@ -5,6 +5,7 @@ go 1.12
 require github.com/go-sql-driver/mysql v1.4.1
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/astaxie/beego v1.11.1
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gomodule/redigo v2.0.0+incompatible

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/asaskevich/govalidator"
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -28,17 +29,12 @@ func (i *IndexController) Create(c *gin.Context) {
 		i.failed(c, models.ParamsError, "参数错误")
 		return
 	}
-	if !strings.HasPrefix(lUrl, "http") {
+
+	if ok := govalidator.IsURL(lUrl); !ok {
 		logs.Error("url is invalid, url: " + lUrl)
 		i.failed(c, models.ParamsError, "请输入合法的url，以http开头")
 		return
 	}
-	//_, err := http.Get(lUrl)
-	//if err != nil{
-	//	logs.Error("url is not accessible, url: " + lUrl)
-	//	i.failed(c, models.ParamsError, "该url无法访问，请检查是否有效")
-	//	return
-	//}
 
 	code, err := services.UrlService{}.GenCode(lUrl)
 	if err != nil {
