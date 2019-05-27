@@ -31,7 +31,7 @@ func BaseInit() {
 func initDB() {
 	var db *gorm.DB
 	url := Conf.DBUser + ":" + Conf.DBPass + "@tcp(" + Conf.DBHost + ":" + Conf.DBPort + ")/" + Conf.DBDatabase +
-		"?charset" + Conf.DBCharset
+		"?charset=" + Conf.DBCharset
 	db, err := gorm.Open(Conf.DBDialect, url)
 	if err != nil {
 		fmt.Println(err.Error())
