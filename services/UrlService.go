@@ -2,12 +2,20 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/hashicorp/golang-lru"
 	"shorturl/models"
+	"sync"
+	"time"
 )
 
 type UrlService struct{}
+
+type Clicks struct {
+	sync.RWMutex
+	count map[string]int
+}
 
 //cache code
 var cCode *lru.Cache
@@ -18,10 +26,41 @@ var cUrl *lru.Cache
 //db model
 var urlCode *models.UrlCode
 
+//click
+var clicks *Clicks
+
 func init() {
 	cCode, _ = lru.New(10000)
 	cUrl, _ = lru.New(10000)
 	urlCode = &models.UrlCode{}
+
+	startClicker()
+}
+
+//save click to db
+func startClicker() {
+	clicks = &Clicks{count: make(map[string]int)}
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		for {
+			if len(clicks.count) > 0 {
+				SaveClick()
+			}
+			<-ticker.C
+		}
+	}()
+}
+
+func SaveClick() {
+	clicks.Lock()
+	data := clicks.count
+	clicks = &Clicks{count: make(map[string]int)} //create a new map
+	for code, c := range data {
+		logs.Info(fmt.Sprintf("add %d click on %s", c, code))
+		models.DB.Where("code = ?", code).Find(&urlCode)
+		urlCode.Click = urlCode.Click + c
+		models.DB.Save(&urlCode)
+	}
 }
 
 func (UrlService) GenCode(url string) (code string, err error) {
@@ -76,6 +115,9 @@ func (UrlService) RecCode(code string) (string, error) {
 		cCode.Add(code, url)
 	}
 
+	clicks.Lock()
+	clicks.count[code]++
+	clicks.Unlock()
 	return url, nil
 }
 

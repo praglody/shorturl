@@ -10,6 +10,7 @@ type UrlCode struct {
 	MD5       string
 	Code      string
 	Url       string
+	Click     int
 	CreatedAt int
 }
 

@@ -6,8 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
+	"os/signal"
 	"shorturl/models"
 	"shorturl/routers"
+	"shorturl/services"
+	"syscall"
 	"time"
 )
 
@@ -50,6 +53,7 @@ func main() {
 }
 
 func init() {
+	go registerSignal()
 	dir, _ := os.Getwd()
 	file := dir + "/.env"
 
@@ -57,4 +61,14 @@ func init() {
 		log.Panicf("conf file [%s]  not found!", file)
 	}
 	models.Conf.InitConfig(file)
+}
+
+func registerSignal() {
+	var c = make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGINT)
+	for {
+		<-c
+		services.SaveClick()
+		os.Exit(0)
+	}
 }
