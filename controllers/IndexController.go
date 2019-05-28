@@ -19,7 +19,7 @@ type IndexController struct {
 }
 
 type CreateRequest struct {
-	Url []string
+	Urls []string
 }
 
 type result struct {
@@ -59,26 +59,26 @@ func (i *IndexController) Create(c *gin.Context) {
 
 //批量生成短网址
 func (i *IndexController) MultiCreate(c *gin.Context) {
-	var urls CreateRequest
-	err := c.ShouldBindJSON(&urls)
+	var request CreateRequest
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		i.failed(c, models.ParamsError, "参数错误")
 		return
 	}
-	if len(urls.Url) == 0 {
+	if len(request.Urls) == 0 {
 		i.failed(c, models.ParamsError, "url不能为空")
 		return
 	}
-	if len(urls.Url) > 50 {
+	if len(request.Urls) > 50 {
 		i.failed(c, models.ParamsError, "最多可同时生成50个")
 		return
 	}
 
-	str, _ := json.Marshal(urls.Url)
+	str, _ := json.Marshal(request.Urls)
 	logs.Info("incoming multicreate url request, url: " + string(str))
 
 	var cCode = make(chan result)
-	for _, v := range urls.Url {
+	for _, v := range request.Urls {
 		go func(lUrl string) {
 			if ok := govalidator.IsURL(lUrl); !ok {
 				logs.Info("url is invalid, url: " + lUrl)
@@ -100,7 +100,7 @@ func (i *IndexController) MultiCreate(c *gin.Context) {
 	for {
 		res := <-cCode
 		results[res.url] = res.code
-		if len(results) == len(urls.Url) {
+		if len(results) == len(request.Urls) {
 			close(cCode)
 			i.success(c, gin.H{"urls": results})
 			return

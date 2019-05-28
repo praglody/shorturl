@@ -39,7 +39,7 @@ func Clicker() {
 				go saveClicks(clicks, false)
 				clicks = make(map[string]int, 100)
 			} else if c == "shutdown" {
-				go saveClicks(clicks, false)
+				go saveClicks(clicks, true)
 			} else {
 				clicks[c]++
 				if len(clicks) > 1000 {
