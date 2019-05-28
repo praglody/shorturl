@@ -14,36 +14,36 @@ import (
 type UrlService struct{}
 
 //cache code
-var cCode, _ = lru.New(10000)
+var cCache, _ = lru.New(10000)
 
 //cache url
-var cUrl, _ = lru.New(10000)
+var uCache, _ = lru.New(10000)
 
 //db model
 var urlCode = &models.UrlCode{}
 
 //click channel
-var ClickC = make(chan string)
+var addClick = make(chan string)
 
 func init() {
-	//点击数异步入库
 	go Clicker()
 }
 
+//异步统计点击数
 func Clicker() {
 	go func() {
 		var clicks = make(map[string]int, 100)
 		for {
-			c := <-ClickC
-			if c == "shutdown" {
-				go saveAndShutdown(clicks)
-			} else if c == "save" {
-				go saveToDB(clicks)
+			c := <-addClick
+			if c == "save" {
+				go saveClicks(clicks, false)
 				clicks = make(map[string]int, 100)
+			} else if c == "shutdown" {
+				go saveClicks(clicks, false)
 			} else {
 				clicks[c]++
 				if len(clicks) > 1000 {
-					go saveToDB(clicks)
+					go saveClicks(clicks, false)
 					clicks = make(map[string]int, 100)
 				}
 			}
@@ -54,84 +54,91 @@ func Clicker() {
 		ticker := time.NewTicker(60 * time.Second)
 		for {
 			<-ticker.C
-			ClickC <- "save"
+			addClick <- "save"
 		}
 	}()
 }
 
-func saveToDB(clicks map[string]int) {
+func Shutdown() {
+	addClick <- "shutdown"
+}
+
+func saveClicks(clicks map[string]int, shutdown bool) {
 	for code, c := range clicks {
 		var uc models.UrlCode
 		models.DB.Where("code = ?", code).Find(&uc).UpdateColumn("click", gorm.Expr("click + ?", c))
 		logs.Info(fmt.Sprintf("add %d click on %s", c, code))
 	}
-}
-
-func saveAndShutdown(clicks map[string]int) {
-	saveToDB(clicks)
-	os.Exit(1)
-}
-
-func (UrlService) GenCode(url string) (code string, err error) {
-	//get from cache
-	if code, ok := cUrl.Get(models.MD5(url)); ok {
-		return code.(string), nil
+	if shutdown {
+		os.Exit(1)
 	}
-	uc := urlCode.GetByUrl(url)
-	var id int
-	if uc.Code != "" {
-		cUrl.Add(models.MD5(url), uc.Code)
-		return uc.Code, nil
-	} else if uc.Id != 0 && uc.Code == "" {
-		id = uc.Id
+}
+
+func (UrlService) GenShortUrl(url string) (shortUrl string, err error) {
+	var shortCode string
+
+	var urlMd5 = models.MD5(url)
+
+	if code, ok := uCache.Get(urlMd5); ok {
+		shortCode = code.(string)
 	} else {
-		id = urlCode.AddUrl(url)
+		result := urlCode.GetByUrl(url)
+		if result.Code != "" {
+			shortCode = result.Code
+		} else {
+			var id = 0
+			if result.Id != 0 {
+				id = result.Id
+			} else {
+				id = urlCode.AddUrl(url)
+			}
+			if id == 0 {
+				return "", errors.New("get id failed")
+			}
+			shortCode = TransToCode(id)
+			if shortCode == "" {
+				return "", errors.New("gen code failed")
+			}
+			logs.Info("add new short url, code: " + shortCode)
+			err = urlCode.UpdateCode(id, shortCode)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
-
-	if id == 0 {
-		return "", errors.New("get id failed")
-	}
-	code = TransToCode(id)
-	if code == "" {
-		return "", errors.New("gen code failed")
-	}
-
-	logs.Info("add new short url, code: " + code)
-	err = urlCode.UpdateCode(id, code)
-	if err != nil {
-		return "", err
-	}
-	//cache
+	//add cache
 	go func() {
-		cCode.Add(code, url)
-		cUrl.Add(models.MD5(url), code)
+		cCache.Add(shortCode, url)
+		uCache.Add(urlMd5, shortCode)
 	}()
 
-	return code, nil
+	return models.Conf.AppUrl + shortCode, nil
 }
 
-func (UrlService) RecCode(code string) (string, error) {
+func (UrlService) RestoreUrl(code string) (string, error) {
 	//get from cache
 	var url string
-	c, _ := cCode.Get(code)
-	if c != nil {
+	if c, ok := cCache.Get(code); ok {
 		url = c.(string)
-	}
-	if url == "" {
+	} else {
 		result := urlCode.GetByCode(code)
 		if result.Url == "" {
 			return "", errors.New("code not existed")
+		} else {
+			url = result.Url
 		}
-		url = result.Url
-		//add cache
-		go func() {
-			cCode.Add(code, url)
-		}()
 	}
 
+	//add cache
 	go func() {
-		ClickC <- code
+		cCache.Add(code, url)
 	}()
+
+	//add click
+	go func() {
+		addClick <- code
+	}()
+
 	return url, nil
 }
 

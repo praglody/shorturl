@@ -12,6 +12,7 @@ func Route(Router *gin.Engine) {
 	api := Router.Group("v1")
 	{
 		api.POST("/create", Index.Create)
+		api.POST("/multicreate", Index.MultiCreate)
 		api.POST("/query", Index.Query)
 	}
 }

@@ -7,11 +7,11 @@ import (
 )
 
 func TestGenCode(t *testing.T) {
-	expected, err := services.UrlService{}.GenCode("http://www.baidu.com")
+	expected, err := services.UrlService{}.GenShortUrl("http://www.baidu.com")
 	assert.Nil(t, err)
 	assert.NotEmpty(t, expected)
 
-	expected, err = services.UrlService{}.GenCode("http://www.iwork.com")
+	expected, err = services.UrlService{}.GenShortUrl("http://www.iwork.com")
 	assert.Nil(t, err)
 	assert.NotEmpty(t, expected)
 }

@@ -68,6 +68,6 @@ func registerSignal() {
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGINT)
 	for {
 		<-c
-		services.ClickC <- "shutdown"
+		services.Shutdown()
 	}
 }

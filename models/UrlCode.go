@@ -14,11 +14,6 @@ type UrlCode struct {
 	CreatedAt int
 }
 
-//自定义表名
-func (UrlCode) TableName() string {
-	return "tbl_url_code"
-}
-
 func (UrlCode) AddUrl(url string) int {
 	var uc UrlCode
 	uc.Url = url

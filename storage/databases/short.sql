@@ -13,7 +13,7 @@ CREATE TABLE `tbl_url_code`
     PRIMARY KEY (`id`),
     UNIQUE KEY `unique_md5` (`md5`) USING HASH
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 10000
+  AUTO_INCREMENT = 20000000
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
 
