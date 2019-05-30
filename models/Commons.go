@@ -10,6 +10,7 @@ const Success = 200      //正常
 const Failed = 500       //失败
 const ParamsError = 4001 //参数错误
 const NotFound = 4004    //记录不存在
+const UnAuthorized = 401 //未授权
 
 //打印元素
 func DD(obj ...interface{}) {

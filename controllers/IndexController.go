@@ -29,6 +29,7 @@ type result struct {
 
 //单个生成短网址
 func (i *IndexController) Create(c *gin.Context) {
+	userId := c.GetInt("userId")
 	lUrl := c.PostForm("url")
 	logs.Info("incoming create url request, url: " + lUrl)
 	if lUrl == "" {
@@ -42,8 +43,7 @@ func (i *IndexController) Create(c *gin.Context) {
 		i.failed(c, models.ParamsError, "无效的url")
 		return
 	}
-
-	shortUrl, err := services.UrlService{}.GenShortUrl(lUrl)
+	shortUrl, err := services.UrlService{}.GenShortUrl(lUrl, userId)
 	if err != nil {
 		logs.Error("gen shortUrl failed, error: " + err.Error())
 		i.failed(c, models.Failed, "请求出错")
@@ -76,8 +76,8 @@ func (i *IndexController) MultiCreate(c *gin.Context) {
 
 	str, _ := json.Marshal(request.Urls)
 	logs.Info("incoming multicreate url request, url: " + string(str))
-
-	var cCode = make(chan result)
+	userId := c.GetInt("userId")
+	cCode := make(chan result)
 	for _, v := range request.Urls {
 		go func(lUrl string) {
 			if ok := govalidator.IsURL(lUrl); !ok {
@@ -85,7 +85,7 @@ func (i *IndexController) MultiCreate(c *gin.Context) {
 				cCode <- result{lUrl, "url is not valid"}
 				return
 			}
-			shortUrl, err := services.UrlService{}.GenShortUrl(lUrl)
+			shortUrl, err := services.UrlService{}.GenShortUrl(lUrl, userId)
 			if err != nil {
 				logs.Error("gen shortUrl failed, error: " + err.Error())
 				cCode <- result{lUrl, err.Error()}
@@ -146,6 +146,9 @@ func (i *IndexController) Path(c *gin.Context) {
 		return
 	}
 	logs.Info("[query]: " + code + " => " + lUrl)
+	if !strings.HasPrefix(lUrl, "http") {
+		lUrl = "http://" + lUrl
+	}
 	c.Header("Location", lUrl)
 	c.AbortWithStatus(302)
 	return

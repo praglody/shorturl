@@ -11,14 +11,16 @@ type UrlCode struct {
 	Code      string
 	Url       string
 	Click     int
+	UserId    int
 	CreatedAt int
 }
 
-func (UrlCode) AddUrl(url string) int {
+func (UrlCode) AddUrl(url string, userId int) int {
 	var uc UrlCode
 	uc.Url = url
 	uc.Code = ""
 	uc.MD5 = MD5(url)
+	uc.UserId = userId
 	uc.CreatedAt = int(time.Now().Unix())
 	DB.Create(&uc)
 	return uc.Id
