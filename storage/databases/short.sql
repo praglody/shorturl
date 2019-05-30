@@ -1,6 +1,6 @@
 CREATE DATABASE if not exists `short` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `url_code`;
+DROP TABLE IF EXISTS `url_codes`;
 
 CREATE TABLE `url_codes`
 (
