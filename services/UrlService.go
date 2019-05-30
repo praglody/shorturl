@@ -74,7 +74,7 @@ func saveClicks(clicks map[string]int, shutdown bool) {
 	}
 }
 
-func (UrlService) GenShortUrl(url string) (shortUrl string, err error) {
+func (UrlService) GenShortUrl(url string, userId int) (shortUrl string, err error) {
 	var shortCode string
 
 	var urlMd5 = models.MD5(url)
@@ -90,7 +90,7 @@ func (UrlService) GenShortUrl(url string) (shortUrl string, err error) {
 			if result.Id != 0 {
 				id = result.Id
 			} else {
-				id = urlCode.AddUrl(url)
+				id = urlCode.AddUrl(url, userId)
 			}
 			if id == 0 {
 				return "", errors.New("get id failed")
