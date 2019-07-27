@@ -1,73 +1,46 @@
 package main
 
 import (
-	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
-	"os/signal"
-	"shorturl/models"
+	"shorturl/app"
+	. "shorturl/configs"
 	"shorturl/routers"
-	"shorturl/services"
 	"syscall"
-	"time"
 )
 
 func main() {
-	if models.Conf.AppEnv == "prod" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	file, _ := os.Create("storage/logs/access.log")
-	gin.DefaultWriter = file
-	r := gin.New()
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		//定制日志格式
-		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
-			param.ClientIP,
-			param.TimeStamp.Format(time.RFC1123),
-			param.Method,
-			param.Path,
-			param.Request.Proto,
-			param.StatusCode,
-			param.Latency,
-			param.Request.UserAgent(),
-			param.ErrorMessage,
-		)
-	}))
-	r.Use(gin.Recovery())
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
 
 	err := logs.SetLogger(logs.AdapterFile, `{"filename":"storage/logs/app.log"}`)
-
 	if err != nil {
 		log.Fatalln("Log init failed, error: " + err.Error())
 	}
-
-	routers.Route(r)
-
-	err = r.Run(":" + models.Conf.AppPort)
+	routers.Route(engine)
+	// 启动服务器，grace restart
+	server := endless.NewServer(":"+Conf.String("APP_PORT"), engine)
+	// 注册程序终止信号
+	var signals = []os.Signal{
+		syscall.SIGHUP,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGTSTP,
+	}
+	for _, signal := range signals {
+		_ = server.RegisterSignalHook(endless.PRE_SIGNAL, signal, func() {
+			app.StopTheWorld()
+		})
+	}
+	err = server.ListenAndServe()
 	if err != nil {
-		log.Fatalln("Server start failed, error: " + err.Error())
+		log.Fatalf("Server start failed, error: " + err.Error())
 	}
-}
-
-func init() {
-	go registerSignal()
-	dir, _ := os.Getwd()
-	file := dir + "/.env"
-
-	if _, err := os.Stat(file); os.IsNotExist(err) {
-		log.Panicf("conf file [%s]  not found!", file)
-	}
-	models.Conf.InitConfig(file)
-}
-
-func registerSignal() {
-	var c = make(chan os.Signal)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGINT)
-	for {
-		<-c
-		services.Shutdown()
-	}
+	log.Println("Server start success")
 }

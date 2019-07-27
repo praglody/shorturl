@@ -3,16 +3,17 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"shorturl/models"
+	"shorturl/app"
+	"shorturl/commons"
 	"strconv"
 	"strings"
 	"time"
 )
 
-var authUsers = make(map[string]models.User)
+var authUsers = make(map[string]app.UserModel)
 
 func Auth() gin.HandlerFunc {
-	var userModel = models.User{}
+	var userModel = app.UserModel{}
 	users := userModel.GetUsers()
 	for _, v := range users {
 		authUsers[v.AppId] = v
@@ -21,7 +22,7 @@ func Auth() gin.HandlerFunc {
 		token := c.GetHeader("token")
 		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"code": models.UnAuthorized,
+				"code": commons.UnAuthorized,
 				"msg":  "token is empty",
 				"data": "",
 			})
@@ -30,7 +31,7 @@ func Auth() gin.HandlerFunc {
 		tokens := strings.Split(token, ".")
 		if tokens == nil || len(tokens) != 3 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"code": models.UnAuthorized,
+				"code": commons.UnAuthorized,
 				"msg":  "token is invalid",
 				"data": "",
 			})
@@ -42,7 +43,7 @@ func Auth() gin.HandlerFunc {
 			i, err := strconv.Atoi(timestamp)
 			if err != nil || int(time.Now().Unix())-i > 100000 {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"code": models.UnAuthorized,
+					"code": commons.UnAuthorized,
 					"msg":  "token is expired",
 					"data": "",
 				})
@@ -50,16 +51,16 @@ func Auth() gin.HandlerFunc {
 			}
 			if user, ok := authUsers[appId]; !ok {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"code": models.UnAuthorized,
+					"code": commons.UnAuthorized,
 					"msg":  "token is wrong",
 					"data": "",
 				})
 				return
 			} else {
-				expected := models.MD5(user.AppSecret + timestamp)
+				expected := commons.MD5(user.AppSecret + timestamp)
 				if expected != appToken {
 					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-						"code": models.UnAuthorized,
+						"code": commons.UnAuthorized,
 						"msg":  "token auth failed",
 						"data": "",
 					})

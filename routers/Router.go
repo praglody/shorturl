@@ -7,10 +7,8 @@ import (
 )
 
 func Route(Router *gin.Engine) {
-
 	Router.GET("/:code", Index.Path)
-
-	api := Router.Group("v1").Use(middlewares.Auth())
+	api := Router.Group("v1").Use(middlewares.Request())
 	{
 		api.POST("/create", Index.Create)
 		api.POST("/multicreate", Index.MultiCreate)

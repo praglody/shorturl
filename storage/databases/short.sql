@@ -12,7 +12,8 @@ CREATE TABLE `url_codes`
     `user_id`    int(11) unsigned                         NOT NULL DEFAULT '0' COMMENT '用户id',
     `created_at` int(10) unsigned                         NOT NULL COMMENT '创建时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `unique_md5` (`md5`) USING HASH
+    UNIQUE KEY `unique_md5` (`md5`) USING HASH,
+    UNIQUE KEY `unique_code` (`code`) USING HASH
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 20000000
   DEFAULT CHARSET = utf8mb4
@@ -30,7 +31,7 @@ CREATE TABLE `users`
     PRIMARY KEY (`id`),
     UNIQUE KEY `unique_name` (`name`) USING BTREE
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 3
+  AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='用户授权表'
 
