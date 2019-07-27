@@ -7,11 +7,11 @@ import (
 )
 
 func Route(Router *gin.Engine) {
-	Router.GET("/:code", Index.Path)
+	Router.GET("/:code", Short.Path)
 	api := Router.Group("v1").Use(middlewares.Request())
 	{
-		api.POST("/create", Index.Create)
-		api.POST("/multicreate", Index.MultiCreate)
-		api.POST("/query", Index.Query)
+		api.POST("/create", Short.Create)
+		api.POST("/multicreate", Short.MultiCreate)
+		api.POST("/query", Short.Query)
 	}
 }

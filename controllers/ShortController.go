@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var Index = &ShortController{
+var Short = &ShortController{
 	urlCode: app.NewService(),
 }
 
@@ -30,7 +30,7 @@ type result struct {
 	code string
 }
 
-//单个生成短网址
+// 单个生成短网址
 func (s *ShortController) Create(c *gin.Context) {
 	userId := c.GetInt("userId")
 	lUrl := c.PostForm("url")
@@ -60,7 +60,7 @@ func (s *ShortController) Create(c *gin.Context) {
 	}
 }
 
-//批量生成短网址
+// 批量生成短网址
 func (s *ShortController) MultiCreate(c *gin.Context) {
 	var request CreateRequest
 	err := c.ShouldBindJSON(&request)
@@ -113,6 +113,7 @@ func (s *ShortController) MultiCreate(c *gin.Context) {
 	}
 }
 
+// 查询短码
 func (s *ShortController) Query(c *gin.Context) {
 	sUrl := c.PostForm("url")
 	parse, err := url.Parse(sUrl)
@@ -133,6 +134,7 @@ func (s *ShortController) Query(c *gin.Context) {
 	}
 }
 
+// 查询并跳转
 func (s *ShortController) Path(c *gin.Context) {
 	code := c.Param("code")
 	logs.Info("incoming query, code: " + code)
