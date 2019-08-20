@@ -8,7 +8,7 @@ import (
 
 func Route(Router *gin.Engine) {
 	Router.GET("/:code", Short.Path)
-	api := Router.Group("v1").Use(middlewares.Request())
+	api := Router.Group("api/v1").Use(middlewares.Request())
 	{
 		api.POST("/create", Short.Create)
 		api.POST("/multicreate", Short.MultiCreate)

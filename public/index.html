@@ -1,0 +1,131 @@
+<html lang="en">
+<head><title>Go短网址</title>
+    <meta charset="UTF-8">
+    <meta name="keywords" content="短网址,短网址,短网址生成,网址缩短,短链接,短域名,短网址服务,短地址,缩短网址">
+    <meta name="description" content="短网址服务,专业的网址缩短服务，具有稳定、快速、安全的特点，支持批量缩短、批量短网址还原、数据报表、开放API接口等服务">
+    <link rel="stylesheet" href="static/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js"></script>
+    <script src="static/vue-clipboard.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <div data-reactroot="" class="ant-layout">
+        <div class="ant-layout">
+            <div class="home-container">
+                <div class="content">
+                    <div class="ant-tabs ant-tabs-top ant-tabs-card ant-tabs-no-animation">
+                        <div role="tablist" class="ant-tabs-bar" tabindex="0">
+                            <div class="ant-tabs-nav-container">
+                                <span class="ant-tabs-tab-prev ant-tabs-tab-btn-disabled">
+                                    <span class="ant-tabs-tab-prev-icon">
+                                    </span>
+                                </span>
+                                <span class="ant-tabs-tab-next ant-tabs-tab-btn-disabled">
+                                    <span class="ant-tabs-tab-next-icon"></span>
+                                </span>
+                                <div class="ant-tabs-nav-wrap">
+                                    <div class="ant-tabs-nav-scroll">
+                                        <div class="ant-tabs-nav ant-tabs-nav-animated">
+                                            <div class="ant-tabs-ink-bar ant-tabs-ink-bar-animated"
+                                                 style="display: block; transform: translate3d(0px, 0px, 0px); width: 90px;"></div>
+                                            <div role="tab" aria-disabled="false" aria-selected="true" class="ant-tabs-tab-active ant-tabs-tab">
+                                                缩短网址
+                                            </div>
+                                            <div role="tab" aria-disabled="false" aria-selected="false"
+                                                 class=" ant-tabs-tab">还原网址
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ant-tabs-content ant-tabs-content-no-animated">
+                            <div role="tabpanel" aria-hidden="false" class="ant-tabs-tabpane ant-tabs-tabpane-active">
+                                <span class="ant-input-search ant-input-search-enter-button ant-input-search-large ant-input-affix-wrapper ant-input-affix-wrapper-lg">
+                                    <input v-model="long_url" v-on:change="check" v-on:keyup="check" @blur="onBlur"
+                                           placeholder="请输入长网址" class="ant-input ant-input-lg">
+                                    <span class="ant-input-suffix">
+                                        <button v-on:click="create" type="button"
+                                                class="ant-btn ant-input-search-button ant-btn-primary ant-btn-lg">
+                                            <span>缩短网址</span>
+                                        </button>
+                                    </span>
+                                </span>
+                                <div class="tip">{{tip}}</div>
+                                <div class="result" v-show="is_show">短网址：{{short_url}}
+                                    <a href="" target="_blank"></a>
+                                    <button v-clipboard:copy="short_url" type="button" class="ant-btn copy-button ant-btn-primary ant-btn-sm">
+                                        <span>复制网址</span>
+                                    </button>
+                                    <br>
+                                    <p>原网址：<a href="" target="_blank">{{long_url}}</a>
+                                    </p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    const app = new Vue({
+        el: '#app',
+        data: {
+            tip: "",
+            long_url: "",
+            short_url: "",
+            is_show: false,
+        },
+        methods: {
+            check: function () {
+                this.is_show = false;
+                this.long_url = this.long_url.trim();
+                if (this.long_url === "") {
+                    return false
+                }
+                console.log(this.long_url);
+                if (!this.long_url.startsWith("http")) {
+                    this.tip = "url格式不正确，请加上协议，如：http://www.baidu.com或https://www.baidu.com";
+                    return false
+                }
+                this.tip = "";
+                return true
+            },
+            create: function () {
+                if (!this.check()) {
+                    return;
+                }
+                const that = this;
+
+                const params = new URLSearchParams();
+                params.append('url', that.long_url);
+
+                axios({
+                    method: 'post',
+                    url: 'http://127.0.0.1:8080/api/v1/create',
+                    headers: {'content-type': 'application/x-www-form-urlencoded'},
+                    data: params
+                }).then(function (response) {
+                    const result = response.data;
+                    if (parseInt(result.code) !== 200) {
+                        this.tip = result["msg"];
+                        return
+                    }
+                    that.short_url = result.data.url;
+                    that.is_show = true;
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            },
+            onBlur: function () {
+                if (this.long_url.trim() === "") {
+                    this.tip = "";
+                }
+            }
+        }
+    });
+</script>
+</html>
