@@ -137,6 +137,11 @@ func (s *ShortController) Query(c *gin.Context) {
 // 查询并跳转
 func (s *ShortController) Path(c *gin.Context) {
 	code := c.Param("code")
+	if code == "index.css" || code == "clipboard.js" || code == "favicon.ico" {
+		c.File("./public/static/" + code)
+		return
+	}
+
 	logs.Info("incoming query, code: " + code)
 	lUrl, err := s.urlCode.RestoreUrl(code)
 	if err != nil {

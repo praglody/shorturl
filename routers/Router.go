@@ -7,7 +7,10 @@ import (
 )
 
 func Route(Router *gin.Engine) {
-	Router.GET("/:code", Short.Path)
+	Router.Use(middlewares.Request()).
+		StaticFile("/", "./public").
+		GET("/:code", Short.Path)
+
 	api := Router.Group("api/v1").Use(middlewares.Request())
 	{
 		api.POST("/create", Short.Create)

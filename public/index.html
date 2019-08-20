@@ -3,13 +3,13 @@
     <meta charset="UTF-8">
     <meta name="keywords" content="短网址,短网址,短网址生成,网址缩短,短链接,短域名,短网址服务,短地址,缩短网址">
     <meta name="description" content="短网址服务,专业的网址缩短服务，具有稳定、快速、安全的特点，支持批量缩短、批量短网址还原、数据报表、开放API接口等服务">
-    <link rel="stylesheet" href="static/index.css">
+    <link rel="stylesheet" href="index.css">
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js"></script>
-    <script src="static/vue-clipboard.min.js"></script>
+    <script src="clipboard.js"></script>
 </head>
 <body>
-<div id="app">
+<div id="app" v-cloak>
     <div data-reactroot="" class="ant-layout">
         <div class="ant-layout">
             <div class="home-container">
@@ -105,7 +105,7 @@
 
                 axios({
                     method: 'post',
-                    url: 'http://127.0.0.1:8080/api/v1/create',
+                    url: '/api/v1/create',
                     headers: {'content-type': 'application/x-www-form-urlencoded'},
                     data: params
                 }).then(function (response) {
