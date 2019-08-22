@@ -46,7 +46,10 @@ func (s *service) GenShortUrl(url string, userId int) (shortUrl string, err erro
 			if result.Id != 0 {
 				id = result.Id
 			} else {
-				id = s.urlModel.AddUrl(url, userId)
+				id, err = s.urlModel.AddUrl(url, userId)
+				if err != nil {
+					return "", err
+				}
 			}
 			if id == 0 {
 				return "", errors.New("get id failed")

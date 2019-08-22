@@ -19,15 +19,18 @@ type UrlCode struct {
 	CreatedAt int
 }
 
-func (UrlCode) AddUrl(url string, userId int) int {
+func (UrlCode) AddUrl(url string, userId int) (int, error) {
 	var uc UrlCode
 	uc.Url = url
 	uc.Code = ""
 	uc.MD5 = commons.MD5(url)
 	uc.UserId = userId
 	uc.CreatedAt = int(time.Now().Unix())
-	commons.DB.Create(&uc)
-	return uc.Id
+	err := commons.DB.Create(&uc).Error
+	if err != nil {
+		return 0, err
+	}
+	return uc.Id, nil
 }
 
 func (UrlCode) GetByUrl(url string) UrlCode {
