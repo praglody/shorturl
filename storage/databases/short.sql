@@ -7,7 +7,7 @@ CREATE TABLE `url_codes`
     `id`         int(11) unsigned                         NOT NULL AUTO_INCREMENT,
     `url`        varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '长url',
     `md5`        varchar(32) COLLATE utf8mb4_unicode_ci   NOT NULL COMMENT '长url的md5值',
-    `code`       varchar(12) COLLATE utf8mb4_unicode_ci   NOT NULL COMMENT '生成的短码',
+    `code`       varchar(12) COLLATE utf8mb4_bin   NOT NULL COMMENT '生成的短码',
     `click`      int(11) unsigned                         NOT NULL DEFAULT '0' COMMENT '点击数',
     `user_id`    int(11) unsigned                         NOT NULL DEFAULT '0' COMMENT '用户id',
     `created_at` int(10) unsigned                         NOT NULL COMMENT '创建时间',
