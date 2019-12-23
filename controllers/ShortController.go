@@ -41,7 +41,7 @@ func (s *ShortController) Create(c *gin.Context) {
 		return
 	}
 
-	if ok := govalidator.IsURL(lUrl); !ok {
+	if !strings.HasPrefix(lUrl, "http") {
 		logs.Info("url is invalid, url: " + lUrl)
 		s.failed(c, commons.ParamsError, "无效的url")
 		return
