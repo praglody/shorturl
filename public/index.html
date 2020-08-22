@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js"></script>
     <script src="clipboard.js"></script>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 </head>
 <body>
 <div id="app" v-cloak>
@@ -78,6 +79,53 @@
             long_url: "",
             short_url: "",
             is_show: false,
+        },
+        mounted: function(){
+            const query = window.location.search;
+            if (!query) {
+                return
+            }
+            const code = query.substring(query.indexOf("=") + 1);
+            if (!code) {
+                return
+            }
+            const params = new URLSearchParams();
+            params.append('code', code);
+            axios({
+                method: 'post',
+                url: '/api/v1/query',
+                headers: {'content-type': 'application/x-www-form-urlencoded'},
+                data: params
+            }).then(function (response) {
+                const result = response.data;
+                if (parseInt(result.code) !== 200) {
+                    this.tip = result["msg"];
+                    return
+                }
+                let fileInfo = JSON.parse(result.data.url);
+                if (!fileInfo) {
+                    return
+                }
+                let options = {
+                    url: fileInfo.url,
+                    data: {
+                        meta: fileInfo.meta
+                    }
+                }
+                const config = $.extend(true, {method: 'post'}, options);
+                const $iframe = $('<iframe id="down-file-iframe" />');
+                const $form = $('<form target="down-file-iframe" method="' + config.method + '" />');
+                $form.attr('action', config.url);
+                for (var key in config.data) {
+                    $form.append('<input type="hidden" name="' + key + '" value="' + config.data[key] + '" />');
+                }
+                $iframe.append($form);
+                $(document.body).append($iframe);
+                $form[0].submit();
+                $iframe.remove();
+            }).catch(function (error) {
+                console.log(error);
+            });
         },
         methods: {
             check: function () {

@@ -6,7 +6,6 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"net/url"
 	"shorturl/app"
 	"shorturl/commons"
 	"strings"
@@ -40,12 +39,11 @@ func (s *ShortController) Create(c *gin.Context) {
 		s.failed(c, commons.ParamsError, "参数错误")
 		return
 	}
-
-	if !strings.HasPrefix(lUrl, "http") {
-		logs.Info("url is invalid, url: " + lUrl)
-		s.failed(c, commons.ParamsError, "无效的url")
-		return
-	}
+	//if !strings.HasPrefix(lUrl, "http") {
+	//	logs.Info("url is invalid, url: " + lUrl)
+	//	s.failed(c, commons.ParamsError, "无效的url")
+	//	return
+	//}
 	shortUrl, err := s.urlCode.GenShortUrl(lUrl, userId)
 	if err != nil {
 		logs.Error("gen shortUrl failed, error: " + err.Error())
@@ -115,13 +113,11 @@ func (s *ShortController) MultiCreate(c *gin.Context) {
 
 // 查询短码
 func (s *ShortController) Query(c *gin.Context) {
-	sUrl := c.PostForm("url")
-	parse, err := url.Parse(sUrl)
-	if err != nil {
-		s.failed(c, commons.ParamsError, err.Error())
+	code := c.PostForm("code")
+	if code == "" {
+		s.failed(c, commons.ParamsError, "code不能为空")
 		return
 	}
-	code := strings.Trim(parse.Path, "/")
 	lUrl, err := s.urlCode.RestoreUrl(code)
 	if err != nil {
 		s.failed(c, commons.NotFound, err.Error())
