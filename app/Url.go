@@ -86,11 +86,11 @@ func (s *service) RestoreUrl(code string) (string, error) {
 		} else {
 			url = result.Url
 		}
+		//add cache
+		go func() {
+			s.cCache.Add(code, url)
+		}()
 	}
-	//add cache
-	go func() {
-		s.cCache.Add(code, url)
-	}()
 	//add click
 	go func() {
 		addClick <- code
